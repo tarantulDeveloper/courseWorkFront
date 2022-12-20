@@ -1,0 +1,59 @@
+$light-black: #2d2d2d;
+$mypink: #fe7877;
+
+.navbar {
+  background-color: $light-black;
+  text-transform: uppercase;
+
+  .nav-item {
+    margin: 5px;
+  }
+
+  a {
+    text-decoration: none;
+    padding: 4px;
+    color: white;
+  }
+
+  li::after {
+    content: "";
+    width: 0%;
+    height: 1px;
+    background: $mypink;
+    display: block;
+    margin: 0;
+    transition: 0.3s;
+  }
+
+  li:first-of-type:hover::after{
+    width: 0;
+  }
+
+  li:hover::after {
+    width: 100%;
+  }
+
+  a.active {
+    background: $mypink;
+  }
+
+  a.active::after {
+    content: "";
+    width: 0;
+  }
+
+  .pink {
+    color: $mypink;
+  }
+}
+
+.p-class {
+    color: red;
+    cursor: pointer;
+    
+}
+
+.myBtn {
+  padding: 2px;
+  margin-left: 3px;
+}
