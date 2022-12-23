@@ -1,0 +1,8 @@
+.home-div {
+    background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+  height: 100vh;
+  background-position: center center;
+    background-image: url("./img/abstract-background.jpg");;
+}

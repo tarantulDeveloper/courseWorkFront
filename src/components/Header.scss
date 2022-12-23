@@ -57,3 +57,20 @@ $mypink: #fe7877;
   padding: 2px;
   margin-left: 3px;
 }
+
+.myCart {
+  position: relative;
+  .myround {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    background-color: green;
+    font-size: 11px;
+  }
+}

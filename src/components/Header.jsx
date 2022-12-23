@@ -1,29 +1,76 @@
-import { FC, useEffect, useState } from "react";
-import { CiMail } from "react-icons/ci";
-import { NavLink, useNavigate } from "react-router-dom";
+import {FC, useContext, useEffect, useState} from "react";
+import {TfiShoppingCart} from "react-icons/tfi";
+import {NavLink, useNavigate} from "react-router-dom";
 import "./Header.scss";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import AuthServices from "../services/AuthServices";
+import ChoiceService from "../services/ChoiceService";
+import Beaver from "../img/beaver.png"
 
-const Header = () => {
+const Header = ({selectedCount}) => {
+  const [isPassed, setIsPassed] = useState(false);
+
   const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
+  const handleClose = () => {
+    setShow(false);
+  };
   const handleShow = () => setShow(true);
   const navigate = useNavigate();
 
   const [username, setUsername] = useState(null);
   const [admin, setAdmin] = useState(null);
 
-  useEffect(() => {
-    getDataFromLocalStorage();
+  const [choices, setChoices] = useState([]);
+
+  const [order, setOrder] = useState({
+    "id": "",
+    "orderName": "",
+    "phone": "",
+    "address": "",
+    "message": "",
+    "choiceList":[]
   });
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setOrder({...order, [e.target.name]: value});
+  };
+
+  useEffect(() => {
+    (() => {
+      if (selectedCount !== undefined) {
+        setIsPassed(true)
+      }
+      getDataFromLocalStorage();
+      getAllChoices();
+    })();
+  }, [])
+
+
+  const getAllChoices = () => {
+    ChoiceService.getAllChoices()
+      .then((res) => {
+        setChoices(res.data);
+        setOrder({...order, choiceList: res.data})
+      })
+      .catch((error) => console.log(error.message));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    deleteChoices();
+    ChoiceService.createOrder(order).then(res => console.log(res)).catch(e => console.log(e.message));
+  }
+
+  const deleteChoices = () => {
+    ChoiceService.deleteChoices().then()
+  }
 
   const getDataFromLocalStorage = () => {
     setUsername(localStorage.getItem("user"));
     setAdmin(localStorage.getItem("admin"));
-    console.log(username);
   };
 
   const logout = () => {
@@ -31,15 +78,14 @@ const Header = () => {
       localStorage.removeItem("user");
       localStorage.removeItem("admin");
       setUsername(null);
+      navigate("/");
     });
   };
 
   return (
     <nav className="navbar navbar-expand-md text-white px-3">
       <div className="container-fluid">
-        <a className="navbar-brand pink" href="#">
-          Logo
-        </a>
+        <img src={Beaver} className='img-fluid' style={{width: '100px', heigth: '30px'}}/>
         {username == null ? "" : <NavLink to="/s">{username}</NavLink>}
 
         <button
@@ -83,7 +129,10 @@ const Header = () => {
               )}
             </li>
             <li className="nav-item">
-              {admin == null ? "" : <NavLink to="/admin">Admin</NavLink>}
+              {admin == null ? "" : <NavLink to="/admin">Worker+</NavLink>}
+            </li>
+            <li className="nav-item">
+              {admin == null ? "" : <NavLink to="/workers">Workers List</NavLink>}
             </li>
             <li className="nav-item">
               <NavLink to="/" end>
@@ -91,73 +140,93 @@ const Header = () => {
               </NavLink>
             </li>
             <li className="nav-item">
-              <NavLink to="/shop" >
-                Shop
-              </NavLink>
+              <NavLink to="/shop">Shop</NavLink>
             </li>
             <li className="nav-item">
-              {username == null ? "" 
-              : <NavLink to="/add-material" >
-                  Add Material
-                </NavLink>
-              }
+              {username == null ? (
+                ""
+              ) : (
+                <NavLink to="/add-material">Material+</NavLink>
+              )}
+            </li>
+
+            <li className="nav-item">
+              {username == null ? (
+                ""
+              ) : (
+                <NavLink to="/add-category">Category+</NavLink>
+              )}
+            </li>
+            <li className="nav-item">
+              {username == null ? "" : <NavLink to='/orders'>Orders</NavLink>}
             </li>
 
             <li
-              className="nav-item"
+              className="nav-item myCart"
               data-toggle="modal"
               data-target="#exampleModal"
               onClick={handleShow}
             >
-              <CiMail />
+              <TfiShoppingCart/>
+              <div className="myround">
+                {isPassed && <div>{selectedCount}</div>}
+              </div>
             </li>
           </ul>
         </div>
       </div>
       <Modal show={show} onHide={handleClose} size="lg" centered>
-        <Modal.Header closeButton style={{ background: "#bdbdbd" }}>
+        <Modal.Header closeButton style={{background: "#bdbdbd"}}>
           <Modal.Title>Contact us</Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ background: "#f2f2f2" }}>
+        <Modal.Body style={{background: "#f2f2f2"}}>
           <p className="text-center">
             We are available 24/7, so don't hesitate to contact us.
           </p>
           <div className="text-center">
-            Sometstreet Ave, 987 <br />
-            London, UK.
-            <br />
-            +44 8948-4343
-            <br />
-            contact@example.com
-            <br />
+            You choose:
+            {choices == null ? (
+              ""
+            ) : (
+              <div>
+                {choices.map((c) => (
+                  <div key={c.id}>{c.name}</div>
+                ))}
+              </div>
+            )}
           </div>
 
           <Form>
             <Form.Group className="mb-3" controlId="formBasicEmail">
               <Form.Label>Your name</Form.Label>
-              <Form.Control type="text" placeholder="Your name" />
+              <Form.Control type="text" placeholder="Your name" name="orderName" value={order.orderName}
+                            onChange={(e) => handleChange(e)}/>
             </Form.Group>
             <Form.Group className="mb-3" controlId="formBasicEmail">
-              <Form.Label>Your email</Form.Label>
-              <Form.Control type="email" placeholder="Your email" />
+              <Form.Label>Your Phone</Form.Label>
+              <Form.Control type="text" placeholder="Your Phone" name="phone" value={order.phone}
+                            onChange={(e) => handleChange(e)}/>
             </Form.Group>
             <Form.Group className="mb-3" controlId="formBasicEmail">
-              <Form.Label>Subject</Form.Label>
-              <Form.Control type="text" placeholder="Subject" />
+              <Form.Label>Your address</Form.Label>
+              <Form.Control type="text" placeholder="Your address" name="address" value={order.address}
+                            onChange={(e) => handleChange(e)}/>
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formBasicEmail">
               <Form.Label>Your Message</Form.Label>
-              <Form.Control as="textarea" rows={5} placeholder="Your message" />
+              <Form.Control as="textarea" rows={5} placeholder="Your message" name="message" value={order.message}
+                            onChange={(e) => handleChange(e)}/>
             </Form.Group>
 
             <div className="d-flex align-items-center justify-content-center">
               <Button
                 variant="primary"
                 type="submit"
-                style={{ background: "#fe7877", border: "none" }}
+                style={{background: "#fe7877", border: "none"}}
+                onClick={(e) => handleSubmit(e)}
               >
-                Send Message
+                Order
               </Button>
             </div>
           </Form>
